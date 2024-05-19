@@ -5,10 +5,20 @@
 
 // Function to generate 32-character hash
 static ngx_int_t generate_fakehash(ngx_http_request_t *r, ngx_str_t *fakehash) {
+    // Check if r or its members are NULL
+    if (r == NULL || r->connection == NULL || r->connection->addr_text.data == NULL || r->headers_in.user_agent == NULL) {
+        return NGX_ERROR;
+    }
+
     // Getting IP, UA, and current time
     ngx_str_t addr = r->connection->addr_text;
     ngx_str_t ua = r->headers_in.user_agent->value;
     ngx_time_t *tp = ngx_timeofday();
+
+    // Check if buffers are large enough to hold the data
+    if (addr.len + ua.len + 21 > 512) {
+        return NGX_ERROR;
+    }
 
     // Converting ngx_str_t to null-terminated C strings
     char addr_str[addr.len + 1];
@@ -30,6 +40,10 @@ static ngx_int_t generate_fakehash(ngx_http_request_t *r, ngx_str_t *fakehash) {
     md = EVP_md5();
 
     mdctx = EVP_MD_CTX_new();
+    if (mdctx == NULL) {
+        return NGX_ERROR;
+    }
+
     EVP_DigestInit_ex(mdctx, md, NULL);
     EVP_DigestUpdate(mdctx, data, strlen(data));
     EVP_DigestFinal_ex(mdctx, md_value, &md_len);
