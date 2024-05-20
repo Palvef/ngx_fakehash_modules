@@ -3,40 +3,16 @@
 #include <ngx_http.h>
 #include <openssl/evp.h>
 
-// Function to generate 32-character hash
 static ngx_int_t generate_fakehash(ngx_http_request_t *r, ngx_str_t *fakehash) {
-    // Check if r or its members are NULL
-    if (r == NULL || r->connection == NULL || r->connection->addr_text.data == NULL || r->headers_in.user_agent == NULL) {
-        return NGX_ERROR;
-    }
-
-    // Getting IP, UA, and current time
     ngx_str_t addr = r->connection->addr_text;
-    ngx_str_t ua;
-    if (r->headers_in.user_agent == NULL || r->headers_in.user_agent->value.len == 0) {
-        // If UA is empty, set it to "-"
-        ua.data = (u_char *)"-";
-        ua.len = 1;
-    } else {
-        ua = r->headers_in.user_agent->value;
-    }
     ngx_time_t *tp = ngx_timeofday();
 
-    // Check if buffers are large enough to hold the data
-    if (addr.len + ua.len + 21 > 512) {
-        return NGX_ERROR;
-    }
-
-    // Converting ngx_str_t to null-terminated C strings
     char addr_str[addr.len + 1];
-    char ua_str[ua.len + 1];
     ngx_memcpy(addr_str, addr.data, addr.len);
-    ngx_memcpy(ua_str, ua.data, ua.len);
     addr_str[addr.len] = '\0';
-    ua_str[ua.len] = '\0';
 
     char data[512];
-    snprintf(data, sizeof(data), "%s|%s|%ld", addr_str, ua_str, tp->sec);
+    snprintf(data, sizeof(data), "%s|%ld", addr_str, tp->sec);
 
     // Initialize OpenSSL EVP interface
     EVP_MD_CTX *mdctx;
@@ -47,10 +23,6 @@ static ngx_int_t generate_fakehash(ngx_http_request_t *r, ngx_str_t *fakehash) {
     md = EVP_md5();
 
     mdctx = EVP_MD_CTX_new();
-    if (mdctx == NULL) {
-        return NGX_ERROR;
-    }
-
     EVP_DigestInit_ex(mdctx, md, NULL);
     EVP_DigestUpdate(mdctx, data, strlen(data));
     EVP_DigestFinal_ex(mdctx, md_value, &md_len);
