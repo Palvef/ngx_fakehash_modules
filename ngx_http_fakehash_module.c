@@ -12,7 +12,14 @@ static ngx_int_t generate_fakehash(ngx_http_request_t *r, ngx_str_t *fakehash) {
 
     // Getting IP, UA, and current time
     ngx_str_t addr = r->connection->addr_text;
-    ngx_str_t ua = r->headers_in.user_agent->value;
+    ngx_str_t ua;
+    if (r->headers_in.user_agent == NULL || r->headers_in.user_agent->value.len == 0) {
+        // If UA is empty, set it to "-"
+        ua.data = (u_char *)"-";
+        ua.len = 1;
+    } else {
+        ua = r->headers_in.user_agent->value;
+    }
     ngx_time_t *tp = ngx_timeofday();
 
     // Check if buffers are large enough to hold the data
