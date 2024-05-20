@@ -4,7 +4,7 @@ Name
 ngx_http_fakehash_modules
 
 ## Overview
-The `ngx_http_fakehash_module` is an Nginx module that generates a unique 32-character hash string for each request based on the client's IP address, User-Agent, and the current access time. This hash is generated using the MD5 algorithm via the OpenSSL EVP interface and can be used for various purposes such as session identification, request tracking, or debugging.
+The `ngx_http_fakehash_module` is an Nginx module that generates a unique 32-character hash string for each request based on the client's IP address the current access time. This hash is generated using the MD5 algorithm via the OpenSSL EVP interface and can be used for various purposes such as session identification, request tracking, or debugging.
 
 ## Installation
 
